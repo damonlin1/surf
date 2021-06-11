@@ -27,12 +27,13 @@ def split_images(src_dir, dest_dir):
                     image_num += 2
 
 
-def merge_pdfs(src_dir, dest_dir):
+def merge_pdfs(src_dir, dest_dir, pdf_cnt):
     """
     Merge a list of pdfs in a directory into a single pdf.
 
     :param src_dir: the source directory path
     :param dest_dir: the destination directory path
+    :param pdf_cnt: the number of pdfs to merge into a single pdf
     :return: none
     """
     pdfs = []
@@ -44,10 +45,10 @@ def merge_pdfs(src_dir, dest_dir):
         if pdf.endswith('pdf'):
             merger.append(pdf)
             num_pdfs += 1
-        if num_pdfs % 10 == 0:
-            merger.write(f"{dest_dir}/merged{num_pdfs // 10}.pdf")
+        if num_pdfs % pdf_cnt == 0:
+            merger.write(f"{dest_dir}/merged{num_pdfs // pdf_cnt}.pdf")
             merger.close()
             merger = PdfFileMerger()
-    if num_pdfs % 10 != 0:  # Add the remaining pdfs that are left off
-        merger.write(f"{dest_dir}/merged{num_pdfs // 10 + 1}.pdf")
+    if num_pdfs % pdf_cnt != 0:  # Add the remaining pdfs that are left off
+        merger.write(f"{dest_dir}/merged{num_pdfs // pdf_cnt + 1}.pdf")
         merger.close()
