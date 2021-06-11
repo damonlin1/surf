@@ -51,8 +51,3 @@ def merge_pdfs(src_dir, dest_dir):
     if num_pdfs % 10 != 0:  # Add the remaining pdfs that are left off
         merger.write(f"{dest_dir}/merged{num_pdfs // 10 + 1}.pdf")
         merger.close()
-
-
-if __name__ == '__main__':
-    split_images('1957/raw', '1957/split')
-    merge_pdfs('1957/split', '1957/merged')
