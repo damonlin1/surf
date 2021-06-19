@@ -20,8 +20,8 @@ def split_images(src_dir, dest_dir):
                 if file.endswith('jpg') and not file.startswith('vignvis'):
                     image = Image.open(f'{src_dir}/{folder}/{file}')
                     width, height = image.size
-                    image_left = image.crop((0, 0, 0.5 * width, height))
-                    image_right = image.crop((0.5 * width, 0, width, height))
+                    image_left = image.crop((0, 0, 0.38 * width, height))
+                    image_right = image.crop((0.62 * width, 0, width, height))
                     image_left.save(f'{dest_dir}/image{image_num}.pdf')
                     image_right.save(f'{dest_dir}/image{image_num + 1}.pdf')
                     image_num += 2
@@ -52,3 +52,7 @@ def merge_pdfs(src_dir, dest_dir, pdf_cnt):
     if num_pdfs % pdf_cnt != 0:  # Add the remaining pdfs that are left off
         merger.write(f"{dest_dir}/merged{num_pdfs // pdf_cnt + 1}.pdf")
         merger.close()
+
+
+if __name__ == '__main__':
+    split_images('1957/raw', '1957/split')
