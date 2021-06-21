@@ -1,5 +1,6 @@
 from PIL import Image
-from PyPDF2 import PdfFileMerger
+from tqdm import tqdm
+import boto3
 import os
 
 
@@ -22,37 +23,36 @@ def split_images(src_dir, dest_dir):
                     width, height = image.size
                     image_left = image.crop((0, 0, 0.38 * width, height))
                     image_right = image.crop((0.62 * width, 0, width, height))
-                    image_left.save(f'{dest_dir}/image{image_num}.pdf')
-                    image_right.save(f'{dest_dir}/image{image_num + 1}.pdf')
+                    image_left.save(f'{dest_dir}/image{image_num}.png')
+                    image_right.save(f'{dest_dir}/image{image_num + 1}.png')
                     image_num += 2
 
 
-def merge_pdfs(src_dir, dest_dir, pdf_cnt):
+def extract_text(img_folder, txt_folder):
     """
-    Merge a list of pdfs in a directory into a single pdf.
+    Extracts text from images in the image folder and writes into text files of the
+    text folder using batch processing with AWS Textract.
 
-    :param src_dir: the source directory path
-    :param dest_dir: the destination directory path
-    :param pdf_cnt: the number of pdfs to merge into a single pdf
+    :param img_folder: the folder of images
+    :param txt_folder: the folder of text files
     :return: none
     """
-    pdfs = []
-    for pdf in os.listdir(src_dir):
-        pdfs.append(f'{src_dir}/{pdf}')
-    merger = PdfFileMerger()
-    num_pdfs = 0
-    for pdf in pdfs:
-        if pdf.endswith('pdf'):
-            merger.append(pdf)
-            num_pdfs += 1
-        if num_pdfs % pdf_cnt == 0:
-            merger.write(f"{dest_dir}/merged{num_pdfs // pdf_cnt}.pdf")
-            merger.close()
-            merger = PdfFileMerger()
-    if num_pdfs % pdf_cnt != 0:  # Add the remaining pdfs that are left off
-        merger.write(f"{dest_dir}/merged{num_pdfs // pdf_cnt + 1}.pdf")
-        merger.close()
+    client = boto3.client('textract')
+
+    for img in tqdm(os.listdir(img_folder)):
+        if img != '.DS_Store':  # Ignore .DS_Store because it is not an image
+            with open(f'{img_folder}/{img}', 'rb') as raw_img:
+                temp_img = raw_img.read()
+                bytes_img = bytearray(temp_img)
+
+            response = client.detect_document_text(Document={'Bytes': bytes_img})
+
+            with open(f'{txt_folder}/{img[0:len(img) - 4]}.txt', 'w') as txt_file:
+                for entry in response['Blocks']:
+                    if entry['BlockType'] != 'PAGE':
+                        txt_file.write(entry['Text'] + ' ')
 
 
 if __name__ == '__main__':
     split_images('1957/raw', '1957/split')
+    extract_text('1957/split', '1957/text')
