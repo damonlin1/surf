@@ -3,7 +3,7 @@ from tqdm import tqdm
 import boto3
 import os
 
-PAGE_SENSITIVITY = 0.70
+PAGE_SENSITIVITY = 0.30
 TEXT_SENSITIVITY = 0.011
 
 
@@ -23,8 +23,8 @@ def split_images(src_dir, dest_dir):
                 if file.lower().endswith('jpg') and not file.startswith('vignvis'):
                     image = Image.open(f'{src_dir}/{folder}/{file}')
                     width, height = image.size
-                    image_left = image.crop((0, 0, 0.38 * width, height))
-                    image_right = image.crop((0.62 * width, 0, width, height))
+                    image_left = image.crop((0, 0, 0.50 * width, height))
+                    image_right = image.crop((0.50 * width, 0, width, height))
                     image_left.save(f'{dest_dir}/{folder}/{file[0:len(file) - 4]}_l.png')
                     image_right.save(f'{dest_dir}/{folder}/{file[0:len(file) - 4]}_r.png')
 
@@ -142,7 +142,7 @@ def remove_borders(filename):
         counter = 0
 
     cropped_img = img.crop((x1, y1, x2, y2))
-    cropped_img.save(f'{filename}_cropped.jpg')
+    cropped_img.save(f'1972_no_border/{filename}_cropped.png')
 
 
 def smart_crop(filename):
@@ -162,7 +162,6 @@ def smart_crop(filename):
             r, g, b = img_rgb.getpixel((x1, y))
             if r < 100 and g < 100 and b < 100:
                 counter += 1
-                print(f'{(x1, y)}, {counter}')
             y += 1
         if counter > TEXT_SENSITIVITY * height:
             break
@@ -181,7 +180,6 @@ def smart_crop(filename):
             r, g, b = img_rgb.getpixel((x2, y))
             if r < 100 and g < 100 and b < 100:
                 counter2 += 1
-                print(f'{(x2, y)}, {counter2}')
             y += 1
         if counter2 > TEXT_SENSITIVITY * height:
             break
@@ -190,9 +188,15 @@ def smart_crop(filename):
         counter2 = 0
 
     cropped_img = img.crop((x1 - 20, 0, x2 + 25, height))
-    cropped_img.save(f'{filename}_smart_cropped.jpg')
+    cropped_img.save(f'1972_edited/{filename}_smart_cropped.png')
 
 
 if __name__ == '__main__':
-    split_images('1957/raw', '1957/split')
-    extract_text('1957/split', '1957/text')
+    split_images('1972', '1972_split')
+
+    for file in os.listdir('1972_split'):
+        print(file)
+        remove_borders(f'1972_split/{file}')
+
+    # for file in os.listdir('1972_no_border'):
+    #     smart_crop(f'1972_no_border/{file}')
