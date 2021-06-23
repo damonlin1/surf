@@ -6,6 +6,12 @@ import os
 PAGE_SENSITIVITY = 0.70
 TEXT_SENSITIVITY = 0.011
 
+from PIL import Image
+from tqdm import tqdm
+import boto3
+import os
+
+
 def split_images(src_dir, dest_dir):
     """
     Split images in the source directory into left and right halves, convert them
@@ -39,18 +45,35 @@ def extract_text(img_folder, txt_folder):
     """
     client = boto3.client('textract')
 
-    for img in tqdm(os.listdir(img_folder)):
-        if img != '.DS_Store':  # Ignore .DS_Store because it is not an image
-            with open(f'{img_folder}/{img}', 'rb') as raw_img:
-                temp_img = raw_img.read()
-                bytes_img = bytearray(temp_img)
+    for folder in tqdm(os.listdir(img_folder)):
+        if folder != '.DS_Store':  # Ignore .DS_Store because it is not a folder
+            for img in os.listdir(f'{img_folder}/{folder}'):
+                if img != '.DS_Store':  # Ignore .DS_Store because it is not an image
+                    # Don't process images that have already been processed
+                    if img not in os.listdir(f'{txt_folder}/{folder}'):
+                        with open(f'{img_folder}/{folder}/{img}', 'rb') as raw_img:
+                            temp_img = raw_img.read()
+                            bytes_img = bytearray(temp_img)
 
-            response = client.detect_document_text(Document={'Bytes': bytes_img})
+                        response = client.detect_document_text(Document={'Bytes': bytes_img})
 
-            with open(f'{txt_folder}/{img[:-4]}.txt', 'w') as txt_file:
-                for entry in response['Blocks']:
-                    if entry['BlockType'] != 'PAGE':
-                        txt_file.write(entry['Text'] + ' ')
+                        with open(f'{txt_folder}/{folder}/{img[:-4]}.txt', 'w') as txt_file:
+                            for entry in response['Blocks']:
+                                if entry['BlockType'] != 'PAGE':
+                                    txt_file.write(entry['Text'] + ' ')
+
+
+def make_folders(folder_lst):
+    """
+    Makes a list of folders.
+    :param folder_lst: a list of folders to make
+    :return: none
+    """
+    for folder in folder_lst:
+        try:
+            os.mkdir(folder)
+        except FileExistsError:
+            pass
 
 
 def remove_borders(filename):
