@@ -6,11 +6,6 @@ import os
 PAGE_SENSITIVITY = 0.70
 TEXT_SENSITIVITY = 0.011
 
-from PIL import Image
-from tqdm import tqdm
-import boto3
-import os
-
 
 def split_images(src_dir, dest_dir):
     """
