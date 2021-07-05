@@ -189,3 +189,4 @@ if __name__ == '__main__':
                     # img_rgb = img.convert("RGB")
                     # image = remove_borders(img_rgb)
                     # image.save(f'TEST_no_borders/{file[:-4]}.png')
+                    os.mkdir()
