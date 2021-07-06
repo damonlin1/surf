@@ -93,6 +93,29 @@ def isolate_acts(filename, destination, end_lines):
     write_file.close()
 
 
+def split_text(original, split, phrase_lst):
+    processed_lst = []
+    max_len = 0
+    for phrase in phrase_lst:
+        processed_lst.append(unidecode.unidecode(phrase).lower())
+        if len(phrase) > max_len:
+            max_len = len(phrase)
+    current_phrase = ''
+    with io.open(original, 'r', encoding='iso-8859-15') as original_txt:
+        with io.open(split, 'w', encoding='iso-8859-15') as split_txt:
+            letter = original_txt.read(1)
+            while letter:
+                split_txt.write(letter)
+                current_phrase += letter
+                if len(current_phrase) > max_len:
+                    temp = unidecode.unidecode(current_phrase[-max_len:]).lower()
+                    if matching_phrase(temp, processed_lst):
+                        print(current_phrase[-max_len:])
+                        split_txt.write('\n\n')
+                        current_phrase = ''
+                letter = original_txt.read(1)
+    
+
 if __name__ == '__main__':
     # for folder in tqdm(os.listdir("T1-Arr02/AD075EC_02D120")):
     #     if folder != '.DS_Store':  # Ignore .DS_Store because it is not a folder
