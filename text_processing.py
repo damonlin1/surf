@@ -158,6 +158,29 @@ def isolate_acts(filename, destination, end_lines):
     length.close()
 
 
+def split_text(original, split, phrase_lst):
+    processed_lst = []
+    max_len = 0
+    for phrase in phrase_lst:
+        processed_lst.append(unidecode.unidecode(phrase).lower())
+        if len(phrase) > max_len:
+            max_len = len(phrase)
+    current_phrase = ''
+    with io.open(original, 'r', encoding='iso-8859-15') as original_txt:
+        with io.open(split, 'w', encoding='iso-8859-15') as split_txt:
+            letter = original_txt.read(1)
+            while letter:
+                split_txt.write(letter)
+                current_phrase += letter
+                if len(current_phrase) > max_len:
+                    temp = unidecode.unidecode(current_phrase[-max_len:]).lower()
+                    if matching_phrase(temp, processed_lst):
+                        print(current_phrase[-max_len:])
+                        split_txt.write('\n\n')
+                        current_phrase = ''
+                letter = original_txt.read(1)
+    
+
 if __name__ == '__main__':
     end_statements = load_end_statements('Ends/ends for ARR02.txt')
     for folder in tqdm(os.listdir("Unsplit/T1-Arr02")):
