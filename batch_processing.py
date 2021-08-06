@@ -3,7 +3,7 @@ from tqdm import tqdm
 import boto3
 import os
 
-PAGE_SENSITIVITY = 0.01
+PAGE_SENSITIVITY = 0.02
 TEXT_SENSITIVITY = 0.03
 
 
@@ -43,8 +43,6 @@ def split_images(image):
     image_left = image.crop((0, 0, 0.50 * width, height))
     image_right = image.crop((0.50 * width, 0, width, height))
     return image_left, image_right
-    # image_left.save(f'{destination}/{filename[0, -4]}_left.png')
-    # image_right.save(f'{destination}/{filename[0, -4]}_right.png')
 
 
 def remove_borders(image):
@@ -117,7 +115,6 @@ def remove_borders(image):
 
     cropped_img = image.crop((x1, y1, x2, y2))
     return cropped_img
-    # cropped_img.save(f'{destination}/{filename[0, -4]}_cropped.png')
 
 
 def smart_crop(image):
@@ -128,15 +125,15 @@ def smart_crop(image):
     :return: the smart cropped image
     """
     width, height = image.size
-    x1 = 21
+    x1 = 31
     y = 1
     counter = 0
     while x1 < width / 3:
         while y < height:
             r, g, b = image.getpixel((x1, y))
             if r < 100 and g < 100 and b < 100:
-                counter += 1
-            y += 1
+                counter += 4
+            y += 4
         if counter > TEXT_SENSITIVITY * height:
             break
         x1 += 5
@@ -144,24 +141,23 @@ def smart_crop(image):
         counter = 0
 
     width, height = image.size
-    x2 = width - 21
+    x2 = width - 31
     y = 1
     counter2 = 0
     while x2 > 2 * width / 3:
         while y < height:
             r, g, b = image.getpixel((x2, y))
             if r < 100 and g < 100 and b < 100:
-                counter2 += 1
-            y += 1
+                counter2 += 4
+            y += 4
         if counter2 > TEXT_SENSITIVITY * height:
             break
         x2 -= 5
         y = 0
         counter2 = 0
 
-    cropped_img = image.crop((x1 - 20, 0, x2 + 20, height))
+    cropped_img = image.crop((x1 - 30, 0, x2 + 30, height))
     return cropped_img
-    # cropped_img.save(f'{destination}/{filename[0, -4]}_smart_cropped.png')
 
 
 def batch_processing(filename, destination):
@@ -172,21 +168,16 @@ def batch_processing(filename, destination):
     left_final = smart_crop(left_image)
     right_final = smart_crop(right_image)
 
-    left_final.save(f'{destination}/{filename[5:-4]}.png')
-    right_final.save(f'{destination}/{filename[5:-4]}.png')
-    # left_image.save(f'{destination}/left.png')
-    # right_image.save(f'{destination}/right.png')
+    left_final.save(f'{destination}/{filename[9:-4]}.png')
+    right_final.save(f'{destination}/{filename[9:-4]}.png')
 
 
 if __name__ == '__main__':
-    for folder in tqdm(os.listdir("TEST")):
+    for folder in tqdm(os.listdir("Test_Set")):
         if folder != '.DS_Store':  # Ignore .DS_Store because it is not a folder
-            for file in tqdm(os.listdir(f'{"TEST"}/{folder}')):
+            os.mkdir(f'Test_Set_edited/{folder}')
+            for file in tqdm(os.listdir(f'{"Test_Set"}/{folder}')):
                 # Ignore duplicated blurry images with 'vignvis' prefix
                 if file.lower().endswith('jpg') and not file.startswith('vignvis'):
-                    batch_processing(f'TEST/{folder}/{file}', 'TEST_edited')
-                    # img = Image.open(f'TEST/{folder}/{file}')
-                    # img_rgb = img.convert("RGB")
-                    # image = remove_borders(img_rgb)
-                    # image.save(f'TEST_no_borders/{file[:-4]}.png')
+                    batch_processing(f'Test_Set/{folder}/{file}', 'Test_Set_edited')
                     os.mkdir()
