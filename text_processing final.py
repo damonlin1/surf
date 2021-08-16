@@ -8,19 +8,6 @@ from difflib import SequenceMatcher
 from tqdm import tqdm
 from unidecode import unidecode
 
-arr02 = "L'ADJOINT AU MAIRE OFFICIER DE L'ETAT-CIVIL"
-arr03 = "MAIRE DU XII° ARRONDISSEMENT DE PARIS"
-
-
-def run_test(filename, destination, end_lines):
-    read_file = io.open(filename, 'r', encoding='iso-8859-15')
-
-    for line in read_file:
-        if len(line) > 1000:
-            list = split_long_acts(line, end_lines, True, destination)
-    read_file.close()
-    return list
-
 
 def sequence_matcher(string1, string2):
     """
@@ -68,7 +55,7 @@ def average_end_line_length(end_lines):
     return sum // num
 
 
-def split_long_acts(record, end_lines, double_check, destination):
+def split_long_acts(record, end_lines, double_check):
     """
     Splits the long acts that the main splitting function finds suspicious.
 
@@ -77,7 +64,6 @@ def split_long_acts(record, end_lines, double_check, destination):
     :param double_check: boolean if this is a double check
     :return: a list of split acts
     """
-    write_file = open(destination, 'a')
 
     if double_check:
         sensitivity = 0.55
@@ -93,14 +79,13 @@ def split_long_acts(record, end_lines, double_check, destination):
         for line in end_lines:
             phrase = record[5*i: 5*i + length]
             # print((5*i + len(line)) - last_act_end)
-            print(sequence_matcher(unidecode(phrase).lower(), unidecode(line).lower()), file=write_file)
             if sequence_matcher(unidecode(phrase).lower(), unidecode(line).lower()) > sensitivity:
                 if (5 * i + length) - last_act_end <= 25:
                     if num_acts != 0:
                         split_acts[num_acts - 1] += record[last_act_end: 5*i + length]
                         last_act_end = 5*i + length
                         break
-                if (5 * i + length) - last_act_end < 483:
+                if (5 * i + length) - last_act_end < 530:
                     break
                 if check_match(unidecode(record[5*i + length: 5*i + length + 36]).lower(), "(suivent les signatures)") > 0.60 \
                         or check_match(unidecode(record[5*i + length: 5*i + length + 15]).lower(), "transcrit") > 0.60:
@@ -118,7 +103,6 @@ def split_long_acts(record, end_lines, double_check, destination):
             split_acts[num_acts - 1] += record[last_act_end:]
         else:
             split_acts.append(record[last_act_end:])
-    write_file.close()
     return split_acts
 
 
@@ -174,9 +158,9 @@ def isolate_acts3(filename, destination, end_lines):
     :return: no return value
     """
     read_file = io.open(filename, 'r', encoding='iso-8859-15')
-    write_file = open(f'{destination}/T1-Arr-05', 'a')
-    acts_per_page_file = open(f'{destination}/T1-Arr-05_acts_per_page', 'a')
-    long_file = open(f'{destination}/T1-Arr-05_long', 'a')
+    write_file = open(f'{destination}/T1-Arr-07', 'a')
+    acts_per_page_file = open(f'{destination}/T1-Arr-07_acts_per_page', 'a')
+    long_file = open(f'{destination}/T1-Arr-07_long', 'a')
 
     pgraph_start = 0
     last_period = 0
@@ -264,15 +248,10 @@ def isolate_acts3(filename, destination, end_lines):
 
 
 if __name__ == '__main__':
-    end_lines = load_end_lines('Ends/ends for ARR05.txt')
-    # for folder in tqdm(os.listdir("Unsplit/T1-Arr05")):
-    #     if folder != '.DS_Store':  # Ignore .DS_Store because it is not a folder
-    #         for file in tqdm(os.listdir(f'Unsplit/T1-Arr05/{folder}')):
-    #             # Ignore duplicated blurry images with 'vignvis' prefix
-    #             if file.lower().endswith('txt') and not file.startswith('vignvis'):
-    #                 isolate_acts3(f'Unsplit/T1-Arr05/{folder}/{file}', f'Split', end_lines)
-    write_file = open("Split/T1-Arr-05/results", 'a')
-    list = run_test("Split/T1-Arr-05/T1-Arr-05_long TEST", "Split/T1-Arr-05/scores", end_lines)
-    for item in list:
-        print(item, file=write_file)
-
+    end_lines = load_end_lines('Ends/ends for ARR07.txt')
+    for folder in tqdm(os.listdir("Unsplit/T1-Arr07")):
+        if folder != '.DS_Store':  # Ignore .DS_Store because it is not a folder
+            for file in tqdm(os.listdir(f'Unsplit/T1-Arr07/{folder}')):
+                # Ignore duplicated blurry images with 'vignvis' prefix
+                if file.lower().endswith('txt') and not file.startswith('vignvis'):
+                    isolate_acts3(f'Unsplit/T1-Arr07/{folder}/{file}', f'Split', end_lines)
